@@ -228,59 +228,54 @@ python src/models/train_mbert.py
 run_all_models.bat
 ```
 
-## Định dạng dữ liệu
+## Các giai đoạn triển khai (Kế hoạch)
 
-### `cleaned_reviews.csv`
+### Giai đoạn 1: Tiền xử lý & Làm sạch dữ liệu (Data Preprocessing)
+Mục tiêu là biến dữ liệu "rác" thành dữ liệu "sạch" để các model dễ tiêu hóa.
 
-Cột chính:
+- **Xử lý Emoji/Icon**: Viết script dùng thư viện emoji hoặc Regex trong Python để xóa bỏ hoặc chuyển đổi (ví dụ: 👍 thành "tốt").
+- **Chuẩn hóa văn bản**: Chuyển về chữ thường, xóa khoảng trắng thừa, xóa dấu câu không cần thiết.
+- **Xử lý Teencode/Viết tắt**: (Mở rộng) Rất quan trọng với review tiếng Việt. Cần một dictionary nhỏ để chuyển "đc", "ok", "bt" thành "được", "đồng ý", "bình thường".
+- **Lọc nhiễu**: Xóa các review rỗng (chỉ có số sao) hoặc các review trùng lặp (spam).
 
-- `mall_name`
-- `reviewer_name`
-- `rating`
-- `review_time`
-- `helpful_count`
-- `owner_reply`
-- `cleaned_text`
-- `review_datetime`
-- `review_date`
+### Giai đoạn 2: Khởi tạo Ground Truth với Local AI (Auto-Labeling)
+Thay vì gán nhãn bằng tay, bạn dùng Ollama để tạo ra tập dữ liệu chuẩn (Ground Truth).
 
-### `labeled_reviews.csv`
+- **Phân loại Cảm xúc (Sentiment Analysis)**: Yêu cầu Ollama đọc review_text và gán nhãn: Tích cực (Positive), Tiêu cực (Negative), hoặc Trung lập (Neutral).
+- **Nhận diện Ngôn ngữ (Language Detection)**: Phân loại vi (Tiếng Việt), en (Tiếng Anh), hoặc other. Điều này trả lời trực tiếp cho câu hỏi: Tỷ lệ khách du lịch/người nước ngoài đến Vincom là bao nhiêu?
+- **Trích xuất Khía cạnh (Aspect Extraction - Mở rộng)**: Nhờ Ollama chỉ ra review đang nói về cái gì (VD: Bãi đỗ xe, Nhân viên, Vệ sinh, Không gian).
 
-Thêm cột:
+### Giai đoạn 3: Benchmark & Đánh giá các Model (Model Evaluation)
+Đây là phần thể hiện hàm lượng kỹ thuật cao nhất của đề tài. Lấy tập dữ liệu đã gán nhãn ở Giai đoạn 2 làm tiêu chuẩn để "chấm điểm" các model khác.
 
-- `sentiment`
+Các Model đề xuất để so sánh:
+- Các model truyền thống/nhỏ: PhoBERT, mBERT.
+- Các LLM thương mại qua API (nếu có chi phí): GPT-4o mini, Gemini Flash, Claude 3.5 Haiku.
+- Các Open-source LLM khác chạy trên Ollama: Qwen 2.5, Gemma 2.
 
-## Ứng dụng phân tích và trực quan hóa
+Tiêu chí đo lường (Metrics): Tính toán độ chính xác tổng thể (Accuracy), Precision, Recall và F1-Score cho từng nhãn.
+Đo lường hiệu năng: So sánh thời gian chạy (Latency) của từng model để xem model nào phù hợp nhất để triển khai thực tế.
 
-Bộ dữ liệu này có thể dùng để:
+### Giai đoạn 4: Khai phá dữ liệu & Phân tích chuyên sâu (EDA & Deep Analytics)
+Đây là lúc bạn biến dữ liệu thành "Insights" (Thông tin chi tiết) có giá trị kinh doanh.
 
-- So sánh mức độ hài lòng giữa các Vincom
-- Phân tích sentiment theo từng địa điểm
-- Vẽ biểu đồ xu hướng review theo thời gian
-- Phân tích độ dài review theo rating/sentiment
-- Khám phá từ khóa nổi bật trong review tích cực và tiêu cực
-- Benchmark mô hình NLP cho review tiếng Việt
+**Phân tích Hành vi Người dùng:**
+- Top Reviewers: Ai là người bình luận nhiều nhất? (Phát hiện khách hàng thân thiết hoặc... đối thủ đi spam).
+- Độ tin cậy: Những review có helpful_count cao nhất thường phàn nàn về vấn đề gì?
 
-## Hạn chế hiện tại
+**Phân tích theo Thời gian (Time-series):**
+- Mức độ hài lòng thay đổi thế nào giữa các ngày thường vs. ngày Lễ/Tết?
+- Khung giờ/Tháng nào nhận được nhiều đánh giá nhất?
 
-- `owner_reply` trong bộ dữ liệu hiện tại đang rỗng, nên chưa phù hợp cho phân tích phản hồi của doanh nghiệp.
-- `helpful_count` hiện chưa có biến thiên, nên chưa dùng tốt cho phân tích độ hữu ích của review.
-- Label sentiment được tạo bằng local LLM, chưa phải nhãn tay 100%.
-- Split train/test đang sử dụng random split, chưa có cross-validation.
-- `environment.yml` chưa bao phủ toàn bộ dependency cho phần benchmark.
+**Phân tích Phản hồi của Quản lý (Owner Reply):**
+- Tỷ lệ review tiêu cực được Vincom phản hồi là bao nhiêu?
+- Có sự tương quan nào giữa việc Vincom tích cực trả lời comment và việc số sao trung bình tăng lên không?
 
-## Hướng phát triển
-
-- Bổ sung aspect extraction: nhân viên, bãi đỗ xe, vệ sinh, không gian, ẩm thực.
-- Bổ sung language detection để tách review tiếng Việt / tiếng Anh.
-- Cải thiện scraper để lấy owner reply và helpful count đầy đủ hơn.
-- Xây dựng notebook EDA và dashboard trực quan hóa.
-- Thử nghiệm thêm Qwen, Gemma hoặc các API model thương mại.
+**Bản đồ Nhiệt Cảm xúc (Mở rộng):** So sánh chéo xem Vincom nào (Royal City vs. Landmark 81) có chất lượng dịch vụ đồng đều nhất.
 
 ## Tác giả và đóng góp
 
 Nếu bạn muốn mở rộng project, nên ưu tiên 3 hướng:
-
 1. Nâng cấp scraper để lấy metadata đầy đủ và ổn định hơn.
 2. Chuyển từ auto-label sang bộ dữ liệu có kiểm duyệt thủ công.
 3. Bổ sung notebook EDA/deployment để project có giá trị ứng dụng rõ hơn.
