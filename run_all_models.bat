@@ -1,28 +1,33 @@
 @echo off
+setlocal
+
+set "PYTHON=python"
+if exist "%~dp0.venv\Scripts\python.exe" set "PYTHON=%~dp0.venv\Scripts\python.exe"
+
 echo =======================================================
 echo Running all 4 models
 echo =======================================================
 echo.
 
 echo [1/4] Running PhoBERT...
-python src\models\train_phobert.py
+%PYTHON% src\models\train_phobert.py
 taskkill /f /im python.exe /fi "memusage gt 1" >nul 2>&1
 if errorlevel 1 goto error
 
 echo.
 echo [2/4] Running BART-pho...
-python src\models\train_bartpho.py
+%PYTHON% src\models\train_bartpho.py
 taskkill /f /im python.exe /fi "memusage gt 1" >nul 2>&1
 if errorlevel 1 goto error
 
 echo.
 echo [3/4] Running XLM-RoBERTa...
-python src\models\train_xlmroberta.py
+%PYTHON% src\models\train_xlmroberta.py
 if errorlevel 1 goto error
 
 echo.
 echo [4/4] Running mBERT...
-python src\models\train_mbert.py
+%PYTHON% src\models\train_mbert.py
 if errorlevel 1 goto error
 
 echo.

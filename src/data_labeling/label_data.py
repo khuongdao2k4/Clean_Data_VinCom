@@ -15,6 +15,8 @@ except ImportError:
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "qwen2.5:7b"
+CONNECT_TIMEOUT_SEC = 10
+READ_TIMEOUT_SEC = 180
 
 def get_sentiment_label(text):
     """
@@ -38,12 +40,17 @@ Nhãn:"""
         "stream": False,
         "options": {
             "temperature": 0.1,  # Nhiệt độ thấp để model đưa ra kết quả nhất quán
-            "top_p": 0.8
+            "top_p": 0.8,
+            "num_predict": 5
         }
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
+        response = requests.post(
+            OLLAMA_URL,
+            json=payload,
+            timeout=(CONNECT_TIMEOUT_SEC, READ_TIMEOUT_SEC),
+        )
         response.raise_for_status()
         result = response.json()
         
