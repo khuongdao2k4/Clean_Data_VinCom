@@ -2,6 +2,7 @@ import React from 'react';
 import { LayoutDashboard, BarChart3, BrainCircuit, Search, MapPin } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import data from '../data/data.json';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -46,7 +47,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       <div className="p-4 border-t border-slate-200 dark:border-slate-700">
         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl">
           <p className="text-xs text-slate-500 dark:text-slate-400">Dataset Version</p>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">v1.2.0 (510 reviews)</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white">v1.2.0 ({data.reviews ? data.reviews.length : 0} reviews)</p>
         </div>
       </div>
     </aside>
